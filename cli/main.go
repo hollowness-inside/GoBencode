@@ -35,6 +35,8 @@ func main() {
 	args := Arguments{}
 
 	i := 0
+
+ARGSCAN:
 	for i < len(os.Args) {
 		arg := os.Args[i]
 
@@ -53,7 +55,7 @@ func main() {
 			i += 1
 		default:
 			args.Text = os.Args[i]
-			break
+			break ARGSCAN
 		}
 
 		i += 1
@@ -80,7 +82,7 @@ func main() {
 		fmt.Fprint(stream, item)
 	} else if args.Op == Encode {
 		if args.HasInputFile {
-			EncodeJsonFile(args.InputFile)
+			EncodeJsonFile(stream, args.InputFile)
 		} else {
 			EncodeJsonString(stream, args.Text)
 		}
@@ -89,7 +91,7 @@ func main() {
 	}
 }
 
-func EncodeJsonFile(filepath string) {
+func EncodeJsonFile(stream *os.File, filepath string) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		panic(err)
@@ -97,7 +99,12 @@ func EncodeJsonFile(filepath string) {
 	defer file.Close()
 
 	decoder := json.NewDecoder(file)
-	decoder.Token()
+
+	var object any
+	decoder.Decode(&object)
+
+	enc := gobencode.NewEncoder(stream)
+	enc.Encode(object)
 }
 
 func EncodeJsonString(stream *os.File, text string) {
