@@ -48,6 +48,15 @@ func encodeValue(w io.Writer, v reflect.Value) error {
 		if _, err := w.Write([]byte{'e'}); err != nil {
 			return err
 		}
+	case reflect.Map:
+		w.Write([]byte{'d'})
+		mr := v.MapRange()
+		for mr.Next() {
+			encodeValue(w, mr.Key())
+			encodeValue(w, mr.Value())
+		}
+		w.Write([]byte{'e'})
+
 	case reflect.Struct:
 		if v.Type() == reflect.TypeOf(BencodeItem{}) {
 			tp := v.FieldByName("Type").Uint()
