@@ -12,9 +12,9 @@ const (
 	EOL     ItemType = 0
 	Integer ItemType = 1
 	Double  ItemType = 2
-	String  ItemType = 4
+	Bytes   ItemType = 4
 	List    ItemType = 5
-	Map     ItemType = 6
+	Dict    ItemType = 6
 )
 
 type BencodeItem struct {
@@ -24,6 +24,7 @@ type BencodeItem struct {
 
 func (d *Decoder) decode() BencodeItem {
 	ch := d.ReadByte()
+	bi := BencodeItem{}
 
 	if '0' <= ch && ch <= '9' {
 		lengthBytes := d.ReadBytes(':')
@@ -36,10 +37,9 @@ func (d *Decoder) decode() BencodeItem {
 		bytes := make([]byte, length)
 		d.Read(bytes)
 
-		return BencodeItem{
-			Value: bytes,
-			Type:  String,
-		}
+		bi.Type = Bytes
+		bi.Value = bytes
+		return bi
 	}
 
 	switch ch {
@@ -50,10 +50,8 @@ func (d *Decoder) decode() BencodeItem {
 			panic(err)
 		}
 
-		return BencodeItem{
-			Value: intVal,
-			Type:  Integer,
-		}
+		bi.Type = Integer
+		bi.Value = intVal
 
 	case 'l':
 		list := []BencodeItem{}
@@ -67,10 +65,8 @@ func (d *Decoder) decode() BencodeItem {
 			list = append(list, item)
 		}
 
-		return BencodeItem{
-			Value: list,
-			Type:  List,
-		}
+		bi.Type = List
+		bi.Value = list
 
 	case 'd':
 		dict := map[string]BencodeItem{}
@@ -79,7 +75,7 @@ func (d *Decoder) decode() BencodeItem {
 			key := d.decode()
 			if key.Type == EOL {
 				break
-			} else if key.Type != String {
+			} else if key.Type != Bytes {
 				panic(fmt.Sprintf("dict key type is not value, it is %d", key.Type))
 			}
 
@@ -87,19 +83,16 @@ func (d *Decoder) decode() BencodeItem {
 			dict[string(key.Value.([]byte))] = value
 		}
 
-		return BencodeItem{
-			Value: dict,
-			Type:  Map,
-		}
+		bi.Type = Dict
+		bi.Value = dict
 
 	case 'e':
-		return BencodeItem{
-			Value: nil,
-			Type:  EOL,
-		}
+		bi.Type = EOL
 	default:
 		panic(fmt.Sprintf("Wrong format symbol (%c) at %d", ch, d.Cursor))
 	}
+
+	return bi
 }
 
 func (v BencodeItem) String() string {
@@ -108,7 +101,7 @@ func (v BencodeItem) String() string {
 		return fmt.Sprintf("%f", v.Value.(float64))
 	case Integer:
 		return fmt.Sprintf("%d", v.Value.(int))
-	case String:
+	case Bytes:
 		return fmt.Sprintf(`"%s"`, string(v.Value.([]byte)))
 	case List:
 		list := v.Value.([]BencodeItem)
@@ -119,7 +112,7 @@ func (v BencodeItem) String() string {
 		}
 
 		return fmt.Sprintf("[%s]", strings.Join(items, ", "))
-	case Map:
+	case Dict:
 		mp := v.Value.(map[string]BencodeItem)
 		items := make([]string, len(mp))
 
