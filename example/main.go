@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	gobencode "joshua/green/bencode"
-	"os"
 )
 
 type Package struct {
@@ -13,24 +12,23 @@ type Package struct {
 }
 
 func main() {
-	enc := gobencode.NewEncoder(os.Stdout)
-	example_encode(enc)
-	example_struct_encode(enc)
+	res := gobencode.DecodeFile("sample.torrent")
+	fmt.Println(res.String())
 }
 
-func example_encode(e *gobencode.Encoder) {
-	e.Encode(52)
-	e.Encode("cats are cool")
-	e.Encode([]int{1, 2, 3, 4, 5, 6})
-	e.Encode([]string{"cats", "are", "cool"})
-	fmt.Println()
-}
+// func example_encode(e *gobencode.Encoder) {
+// 	e.Encode(52)
+// 	e.Encode("cats are cool")
+// 	e.Encode([]int{1, 2, 3, 4, 5, 6})
+// 	e.Encode([]string{"cats", "are", "cool"})
+// 	fmt.Println()
+// }
 
-func example_struct_encode(e *gobencode.Encoder) {
-	e.Encode(Package{
-		Name:  "gobencode",
-		Date:  1354534,
-		Peers: []string{"joshua", "codi", "mark"},
-	})
-	fmt.Println()
-}
+// func example_struct_encode(e *gobencode.Encoder) {
+// 	e.Encode(Package{
+// 		Name:  "gobencode",
+// 		Date:  1354534,
+// 		Peers: []string{"joshua", "codi", "mark"},
+// 	})
+// 	fmt.Println()
+// }
