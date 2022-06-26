@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	gobencode "joshua/green/bencode"
+	"os"
 )
 
 type Package struct {
@@ -12,23 +13,43 @@ type Package struct {
 }
 
 func main() {
-	res := gobencode.DecodeFile("sample.torrent")
-	fmt.Println(res.String())
+	FileDecodeExample()
+	StringDecodeExample()
+
+	EncodeExample1()
+	EncodeExample2()
 }
 
-// func example_encode(e *gobencode.Encoder) {
-// 	e.Encode(52)
-// 	e.Encode("cats are cool")
-// 	e.Encode([]int{1, 2, 3, 4, 5, 6})
-// 	e.Encode([]string{"cats", "are", "cool"})
-// 	fmt.Println()
-// }
+func FileDecodeExample() {
+	fmt.Println("\n\n\t\tFileDecodeExample")
+	res := gobencode.DecodeFile("sample.torrent")
+	fmt.Println(res)
+}
 
-// func example_struct_encode(e *gobencode.Encoder) {
-// 	e.Encode(Package{
-// 		Name:  "gobencode",
-// 		Date:  1354534,
-// 		Peers: []string{"joshua", "codi", "mark"},
-// 	})
-// 	fmt.Println()
-// }
+func StringDecodeExample() {
+	fmt.Println("\n\n\t\tStringDecodeExample")
+	res := gobencode.DecodeString("l5:hello5:worldi12345ed6:animal3:cat4:typei1eee")
+	fmt.Println(res)
+}
+
+func EncodeExample1() {
+	fmt.Println("\n\n\t\tEncodeExample1")
+	e := gobencode.NewEncoder(os.Stdout)
+
+	list := gobencode.DecodeString("l5:hello5:worldi12345ed6:animal3:cat4:typei1eee")
+	e.Encode(list)
+}
+
+func EncodeExample2() {
+	fmt.Println("\n\n\t\tEncodeExample2")
+
+	e := gobencode.NewEncoder(os.Stdout)
+
+	e.Encode(1234)
+
+	fmt.Println()
+	e.Encode([]string{"hello", "world"})
+
+	fmt.Println()
+	e.Encode(map[string]int{"a": 1, "b": 2, "c": 3})
+}
