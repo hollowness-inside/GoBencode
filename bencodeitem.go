@@ -2,7 +2,6 @@ package gobencode
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -11,10 +10,9 @@ type ItemType byte
 const (
 	EOL     ItemType = 0
 	Integer ItemType = 1
-	Double  ItemType = 2
-	Bytes   ItemType = 4
-	List    ItemType = 5
-	Dict    ItemType = 6
+	Bytes   ItemType = 2
+	List    ItemType = 3
+	Dict    ItemType = 4
 )
 
 type BencodeItem struct {
@@ -22,83 +20,8 @@ type BencodeItem struct {
 	Value any
 }
 
-func (d *Decoder) decode() BencodeItem {
-	ch := d.ReadByte()
-	bi := BencodeItem{}
-
-	if '0' <= ch && ch <= '9' {
-		lengthBytes := d.ReadBytes(':')
-		lengthBytes = append([]byte{ch}, lengthBytes[:len(lengthBytes)-1]...)
-		length, err := strconv.Atoi(string(lengthBytes))
-		if err != nil {
-			panic(err)
-		}
-
-		bytes := make([]byte, length)
-		d.Read(bytes)
-
-		bi.Type = Bytes
-		bi.Value = bytes
-		return bi
-	}
-
-	switch ch {
-	case 'i':
-		rawInt := d.ReadBytes('e')
-		intVal, err := strconv.Atoi(string(rawInt[:len(rawInt)-1]))
-		if err != nil {
-			panic(err)
-		}
-
-		bi.Type = Integer
-		bi.Value = intVal
-
-	case 'l':
-		list := []BencodeItem{}
-
-		for {
-			item := d.decode()
-			if item.Type == EOL {
-				break
-			}
-
-			list = append(list, item)
-		}
-
-		bi.Type = List
-		bi.Value = list
-
-	case 'd':
-		dict := map[string]BencodeItem{}
-
-		for {
-			key := d.decode()
-			if key.Type == EOL {
-				break
-			} else if key.Type != Bytes {
-				panic(fmt.Sprintf("dict key type is not value, it is %d", key.Type))
-			}
-
-			value := d.decode()
-			dict[string(key.Value.([]byte))] = value
-		}
-
-		bi.Type = Dict
-		bi.Value = dict
-
-	case 'e':
-		bi.Type = EOL
-	default:
-		panic(fmt.Sprintf("Wrong format symbol (%c) at %d", ch, d.Cursor))
-	}
-
-	return bi
-}
-
 func (v BencodeItem) String() string {
 	switch v.Type {
-	case Double:
-		return fmt.Sprintf("%f", v.Value.(float64))
 	case Integer:
 		return fmt.Sprintf("%d", v.Value.(int))
 	case Bytes:
