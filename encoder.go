@@ -49,20 +49,33 @@ func encodeValue(w io.Writer, v reflect.Value) error {
 			return err
 		}
 	case reflect.Struct:
-		if _, err := w.Write([]byte{'d'}); err != nil {
-			return err
-		}
+		if v.Type() == reflect.TypeOf(BencodeItem{}) {
+			tp := v.FieldByName("Type").Uint()
+			vl := v.FieldByName("Value")
 
-		for i := 0; i < v.NumField(); i++ {
-			fmt.Fprintf(w, "%s:", v.Type().Field(i).Name)
-
-			if err := encodeValue(w, v.Field(i)); err != nil {
-				return err
+			switch ItemType(tp) {
+			case Integer:
+				fmt.Fprintf(w, "i%de", vl.Interface().(int))
+			case Bytes:
+				data := vl.Interface().([]byte)
+				fmt.Fprintf(w, "%d:", len(data))
+				w.Write(data)
+			case List:
+				w.Write([]byte{'l'})
+				for _, v := range vl.Interface().([]BencodeItem) {
+					encodeValue(w, reflect.ValueOf(v))
+				}
+				w.Write([]byte{'e'})
+			case Dict:
+				w.Write([]byte{'d'})
+				for k, v := range vl.Interface().(map[string]BencodeItem) {
+					encodeValue(w, reflect.ValueOf(k))
+					encodeValue(w, reflect.ValueOf(v))
+				}
+				w.Write([]byte{'e'})
 			}
-		}
 
-		if _, err := w.Write([]byte{'e'}); err != nil {
-			return err
+			return nil
 		}
 	}
 
