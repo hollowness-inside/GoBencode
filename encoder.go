@@ -28,6 +28,10 @@ func encodeValue(w io.Writer, v reflect.Value) error {
 		if _, err := fmt.Fprintf(w, "i%de", v.Uint()); err != nil {
 			return err
 		}
+	case reflect.Float32, reflect.Float64:
+		if _, err := fmt.Fprintf(w, "i%de", int(v.Float())); err != nil {
+			return err
+		}
 	case reflect.String:
 		str := v.String()
 		if _, err := fmt.Fprintf(w, "%d:%s", len(str), str); err != nil {
@@ -48,6 +52,8 @@ func encodeValue(w io.Writer, v reflect.Value) error {
 		if _, err := w.Write([]byte{'e'}); err != nil {
 			return err
 		}
+	case reflect.Interface:
+		encodeValue(w, reflect.ValueOf(v.Interface()))
 	case reflect.Map:
 		w.Write([]byte{'d'})
 		mr := v.MapRange()

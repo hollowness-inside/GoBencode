@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	gobencode "joshua/green/bencode"
 	"os"
@@ -42,9 +43,6 @@ func main() {
 			args.Op = Decode
 		case "-e":
 			args.Op = Encode
-			args.HasInputFile = true
-			args.InputFile = os.Args[i+1]
-			i += 1
 		case "-i":
 			args.HasInputFile = true
 			args.InputFile = os.Args[i+1]
@@ -84,9 +82,31 @@ func main() {
 		if args.HasInputFile {
 			EncodeJsonFile(args.InputFile)
 		} else {
-			EncodeJsonString(args.Text)
+			EncodeJsonString(stream, args.Text)
 		}
 	} else {
 		help()
 	}
+}
+
+func EncodeJsonFile(filepath string) {
+	file, err := os.Open(filepath)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	decoder.Token()
+}
+
+func EncodeJsonString(stream *os.File, text string) {
+	var object any
+	err := json.Unmarshal([]byte(text), &object)
+	if err != nil {
+		panic(err)
+	}
+
+	enc := gobencode.NewEncoder(stream)
+	enc.Encode(object)
 }
