@@ -34,9 +34,9 @@ func help() {
 func main() {
 	args := Arguments{}
 
-	i := 0
+	i := 1
 
-ARGSCAN:
+ARGS:
 	for i < len(os.Args) {
 		arg := os.Args[i]
 
@@ -55,7 +55,7 @@ ARGSCAN:
 			i += 1
 		default:
 			args.Text = os.Args[i]
-			break ARGSCAN
+			break ARGS
 		}
 
 		i += 1
