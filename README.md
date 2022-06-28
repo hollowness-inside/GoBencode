@@ -23,3 +23,5 @@ fmt.Println(list[0])            // "hello"
 dict := list[3].Value.(map[string]BencodeItem)
 fmt.Println(dict["animal"])     // "cat"
 ```
+# BencodeCLI
+Take a look at the CLI tool based on this library. [Link](https://github.com/MrPythoneer/BencodeCLI)
